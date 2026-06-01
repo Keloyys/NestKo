@@ -1,5 +1,7 @@
 package com.example.nestko.core.ui
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
@@ -150,7 +152,7 @@ fun SetupNavGraph(navController: NavHostController) {
 @Composable
 fun PlaceholderScreen(name: String) {
     androidx.compose.foundation.layout.Box(
-        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = androidx.compose.ui.Alignment.Center
     ) {
         Text(text = "Welcome to $name", style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)

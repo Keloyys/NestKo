@@ -10,8 +10,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,11 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nestko.core.ui.MaintenanceTicketCard
-import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
-import com.patrykandpatrick.vico.compose.chart.Chart
-import com.patrykandpatrick.vico.compose.chart.column.columnChart
-import com.patrykandpatrick.vico.core.entry.entryModelOf
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +44,17 @@ fun LandlordDashboardScreen(
     viewModel: LandlordDashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val modelProducer = remember { CartesianChartModelProducer() }
+
+    LaunchedEffect(uiState.revenueData) {
+        if (uiState.revenueData.isNotEmpty()) {
+            modelProducer.runTransaction {
+                columnSeries {
+                    series(uiState.revenueData.map { it.second.toFloat() / 1000 })
+                }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -106,15 +123,13 @@ fun LandlordDashboardScreen(
                         Text(text = "Revenue Overview", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        val chartEntryModel = entryModelOf(
-                            uiState.revenueData.map { it.second.toFloat() / 1000 } // In thousands
-                        )
-                        
-                        Chart(
-                            chart = columnChart(),
-                            model = chartEntryModel,
-                            startAxis = rememberStartAxis(),
-                            bottomAxis = rememberBottomAxis(),
+                        CartesianChartHost(
+                            chart = rememberCartesianChart(
+                                rememberColumnCartesianLayer(),
+                                startAxis = VerticalAxis.rememberStart(),
+                                bottomAxis = HorizontalAxis.rememberBottom(),
+                            ),
+                            modelProducer = modelProducer,
                             modifier = Modifier.height(200.dp)
                         )
                         

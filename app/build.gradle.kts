@@ -45,6 +45,10 @@ android {
     }
 }
 
+ksp {
+    arg("hilt.enableTransformForLocalTests", "true")
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -61,6 +65,8 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    ksp(libs.dagger.compiler)
+    ksp(libs.hilt.androidx.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
     // Navigation

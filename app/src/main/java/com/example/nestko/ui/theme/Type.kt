@@ -24,7 +24,7 @@ val PoppinsFontFamily = FontFamily(
 
 val InterFontFamily = FontFamily(
     Font(googleFont = GoogleFont("Inter"), fontProvider = provider, weight = FontWeight.Medium),
-    Font(googleFont = GoogleFont("Inter"), fontProvider = provider, weight = FontWeight.Regular)
+    Font(googleFont = GoogleFont("Inter"), fontProvider = provider, weight = FontWeight.Normal)
 )
 
 // Set of Material typography styles to start with
