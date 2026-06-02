@@ -56,22 +56,11 @@ fun PropertyManagementScreen(
                 Text(text = "My Properties", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             
-            // Placeholder list
-            items(5) { index ->
-                Card(
-                    modifier = Modifier.fillMaxWidth().height(100.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        Surface(modifier = Modifier.size(60.dp), shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primary) {}
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text("Property ${index + 1}", fontWeight = FontWeight.Bold)
-                            Text("Cebu City • 4 Units", style = MaterialTheme.typography.labelMedium)
-                        }
-                    }
-                }
+            items(uiState.properties) { property ->
+                PropertyCard(
+                    property = property,
+                    onClick = { onPropertyClick(property.id) }
+                )
             }
         }
     }

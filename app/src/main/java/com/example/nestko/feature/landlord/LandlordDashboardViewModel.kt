@@ -11,13 +11,15 @@ import javax.inject.Inject
 data class LandlordDashboardUiState(
     val summary: PortfolioSummary? = null,
     val revenueData: List<Pair<String, Double>> = emptyList(),
+    val properties: List<Property> = emptyList(),
     val recentActivity: List<MaintenanceRequest> = emptyList(),
     val isLoading: Boolean = false
 )
 
 @HiltViewModel
 class LandlordDashboardViewModel @Inject constructor(
-    private val repository: LandlordRepository
+    private val repository: LandlordRepository,
+    private val propertyRepository: PropertyRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LandlordDashboardUiState())
@@ -35,12 +37,14 @@ class LandlordDashboardViewModel @Inject constructor(
             combine(
                 repository.getPortfolioSummary(landlordId),
                 repository.getMonthlyRevenueData(landlordId),
+                propertyRepository.getProperties(),
                 repository.getMaintenanceRequests(landlordId)
-            ) { summary, revenue, maintenance ->
+            ) { summary, revenue, propertiesList, maintenance ->
                 _uiState.update {
                     it.copy(
                         summary = summary,
                         revenueData = revenue,
+                        properties = propertiesList.take(3),
                         recentActivity = maintenance.take(3),
                         isLoading = false
                     )

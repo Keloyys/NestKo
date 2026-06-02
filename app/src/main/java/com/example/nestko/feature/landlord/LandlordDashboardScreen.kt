@@ -23,15 +23,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nestko.core.ui.MaintenanceTicketCard
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import com.example.nestko.core.ui.PropertyCard
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,17 +41,7 @@ fun LandlordDashboardScreen(
     viewModel: LandlordDashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val modelProducer = remember { CartesianChartModelProducer() }
-
-    LaunchedEffect(uiState.revenueData) {
-        if (uiState.revenueData.isNotEmpty()) {
-            modelProducer.runTransaction {
-                columnSeries {
-                    series(uiState.revenueData.map { it.second.toFloat() / 1000 })
-                }
-            }
-        }
-    }
+    // Static Pie Chart configuration (no Model Producer needed)
 
     Scaffold(
         topBar = {
@@ -123,44 +110,13 @@ fun LandlordDashboardScreen(
                         Text(text = "Revenue Overview", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        CartesianChartHost(
-                            chart = rememberCartesianChart(
-                                rememberColumnCartesianLayer(),
-                                startAxis = VerticalAxis.rememberStart(),
-                                bottomAxis = HorizontalAxis.rememberBottom(),
-                            ),
-                            modelProducer = modelProducer,
-                            modifier = Modifier.height(200.dp)
+                        ModernPieChart(
+                            data = uiState.revenueData,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .padding(16.dp)
                         )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Values in Thousands (PHP)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
-                    }
-                }
-            }
-
-            item {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "Maintenance Requests", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        TextButton(onClick = onMaintenance) {
-                            Text("See All", color = MaterialTheme.colorScheme.tertiary)
-                        }
-                    }
-                    
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        uiState.recentActivity.forEach { ticket ->
-                            MaintenanceTicketCard(ticket = ticket, onClick = { /* TODO */ })
-                        }
                     }
                 }
             }
@@ -178,20 +134,31 @@ fun LandlordDashboardScreen(
                     )
                     DashboardActionButton(
                         modifier = Modifier.weight(1f),
-                        icon = Icons.Default.Group,
-                        label = "Tenants",
-                        onClick = onTenants
+                        icon = Icons.Default.Build,
+                        label = "Maintenance",
+                        onClick = onMaintenance
                     )
                 }
             }
             
             item {
-                DashboardActionButton(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    icon = Icons.Default.AccountBalance,
-                    label = "Financial Reports",
-                    onClick = onFinances
-                )
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    DashboardActionButton(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.Group,
+                        label = "Tenants",
+                        onClick = onTenants
+                    )
+                    DashboardActionButton(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.AccountBalance,
+                        label = "Finances",
+                        onClick = onFinances
+                    )
+                }
             }
         }
     }
@@ -235,6 +202,86 @@ fun DashboardActionButton(
             Icon(imageVector = icon, contentDescription = null)
             Spacer(modifier = Modifier.width(12.dp))
             Text(text = label, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun ModernPieChart(
+    data: List<Pair<String, Double>>,
+    modifier: Modifier = Modifier
+) {
+    val colors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiary,
+        Color(0xFF22C55E),
+        Color(0xFFF59E0B),
+        Color(0xFF3B82F6)
+    )
+
+    if (data.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("No data available")
+        }
+        return
+    }
+
+    val total = data.sumOf { it.second }.toFloat()
+    if (total == 0f) return
+
+    var startAngle = -90f
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .aspectRatio(1f)
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val strokeWidth = 40.dp.toPx()
+                val radius = (size.minDimension - strokeWidth) / 2
+                
+                data.forEachIndexed { index, pair ->
+                    val sweepAngle = (pair.second.toFloat() / total) * 360f
+                    drawArc(
+                        color = colors[index % colors.size],
+                        startAngle = startAngle,
+                        sweepAngle = sweepAngle,
+                        useCenter = false,
+                        topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
+                        size = Size(radius * 2, radius * 2),
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Butt)
+                    )
+                    startAngle += sweepAngle
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.width(24.dp))
+        
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            data.take(5).forEachIndexed { index, pair ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(colors[index % colors.size], RoundedCornerShape(2.dp))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = pair.first,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }
