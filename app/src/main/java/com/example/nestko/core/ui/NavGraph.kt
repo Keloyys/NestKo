@@ -25,6 +25,8 @@ import com.example.nestko.feature.landlord.FinancialReportsScreen
 
 import com.example.nestko.feature.auth.OnboardingScreen
 import com.example.nestko.feature.auth.RoleSelectorScreen
+import com.example.nestko.feature.auth.LoginScreen
+import com.example.nestko.feature.auth.RegisterScreen
 import com.example.nestko.feature.shared.NotificationsScreen
 
 @Composable
@@ -43,13 +45,23 @@ fun SetupNavGraph(navController: NavHostController) {
         }
         composable(Screen.RoleSelector.route) {
             RoleSelectorScreen(
-                onGuestSelected = { navController.navigate(Screen.GuestDiscovery.route) },
-                onTenantSelected = { navController.navigate(Screen.TenantDashboard.route) },
-                onLandlordSelected = { navController.navigate(Screen.LandlordDashboard.route) }
+                onRenterSelected = { navController.navigate(Screen.Login.route) },
+                onLandlordSelected = { navController.navigate(Screen.Login.route) }
             )
         }
-        composable(Screen.Login.route) { PlaceholderScreen("Login") }
-        composable(Screen.Register.route) { PlaceholderScreen("Register") }
+        composable(Screen.Login.route) { 
+            LoginScreen(
+                onNavigateToRegister = { navController.navigate(Screen.Register.route) },
+                onLoginSuccess = { navController.navigate(Screen.TenantDashboard.route) },
+                onForgotPassword = { /* TODO */ }
+            ) 
+        }
+        composable(Screen.Register.route) { 
+            RegisterScreen(
+                onNavigateToLogin = { navController.popBackStack() },
+                onRegisterSuccess = { navController.navigate(Screen.TenantDashboard.route) }
+            ) 
+        }
 
         // Tenant
         composable(Screen.TenantDashboard.route) {

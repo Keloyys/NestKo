@@ -22,8 +22,7 @@ import androidx.compose.ui.unit.sp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoleSelectorScreen(
-    onGuestSelected: () -> Unit,
-    onTenantSelected: () -> Unit,
+    onRenterSelected: () -> Unit,
     onLandlordSelected: () -> Unit
 ) {
     Scaffold { padding ->
@@ -58,21 +57,11 @@ fun RoleSelectorScreen(
             Spacer(modifier = Modifier.height(48.dp))
             
             RoleCard(
-                title = "I'm looking to rent",
-                description = "Browse properties and apply online",
+                title = "I'm looking to rent or a tenant",
+                description = "Browse properties, pay rent, and request maintenance",
                 icon = Icons.Default.Search,
                 color = MaterialTheme.colorScheme.primary,
-                onClick = onGuestSelected
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            RoleCard(
-                title = "I'm a current tenant",
-                description = "Pay rent and request maintenance",
-                icon = Icons.Default.Group,
-                color = MaterialTheme.colorScheme.secondary,
-                onClick = onTenantSelected
+                onClick = onRenterSelected
             )
             
             Spacer(modifier = Modifier.height(16.dp))
